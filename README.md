@@ -19,7 +19,7 @@ npm run dev
 ```
 
 ### Pour un utilisateur lambda
-Téléchargez le fichier `.deb` depuis la [dernière release]([https://github.com/votre-repo/utilitaire-ubuntu/releases/latest](https://github.com/slayercode1/utilitaire-ubuntu/releases/tag/v.1.0.0)) et installez-le.
+Téléchargez le fichier `.deb` depuis la [dernière release](https://github.com/slayercode1/utilitaire-ubuntu/releases/tag/v.1.0.0) et installez-le.
 
 
 ## Fonctionnalités
