@@ -27,5 +27,6 @@ Téléchargez le fichier `.deb` depuis la [dernière release]([https://github.co
 - Recherche sur le web
 - Recherche de fichiers texte ou autres types de fichiers
 - Recherche et exécution d'applications `.jar`
-- Lancement en mode `sudo`
+- Ajouter une icon par defaut
+- Pouvoir scroller avec les fleche du clavier
 
