@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 export function InputSearch({
   searchTerm,
   handleSearch,
-}: { searchTerm: string; handleSearch: (value: string) => void, }) {
+  setIsFormulaDetected,
+}: { searchTerm: string; handleSearch: (value: string) => void, setIsFormulaDetected: (value: boolean) => void }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [formulaDetected, setFormulaDetected] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -71,6 +72,7 @@ export function InputSearch({
   const detectAndCalculateFormula = (value: string) => {
     if (value.trim() === "") {
       setFormulaDetected(false); // Si le champ est vide, on désactive la détection
+      setIsFormulaDetected(false); // Désactive la détection de formule dans le parent
       setResult(null); // Réinitialise le résultat
       return;
     }
@@ -79,13 +81,16 @@ export function InputSearch({
       const result = evaluateExpression(value); // Évaluation de l'expression
       if (isNaN(result)) {
         setFormulaDetected(false); // Si le résultat est NaN, on indique qu'il n'y a pas de formule valide
+        setIsFormulaDetected(false); // Désactive la détection de formule dans le parent
         setResult("Expression invalide"); // Affiche un message d'erreur
       } else {
         setFormulaDetected(true); // Formule valide détectée
+        setIsFormulaDetected(true); // Active la détection de formule dans le parent
         setResult(result.toString()); // Mettre à jour le résultat
       }
     } catch (error) {
       setFormulaDetected(false); // Erreur dans le calcul, pas de formule valide
+      setIsFormulaDetected(false); // Désactive la détection de formule dans le parent
       setResult("Erreur de calcul"); // Affiche un message d'erreur
     }
   };

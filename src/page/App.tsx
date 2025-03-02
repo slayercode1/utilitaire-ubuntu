@@ -8,6 +8,9 @@ function App() {
 	const [searchTerm, setSearchTerm] = useState<string>("");
 	const [status, setStatus] = useState<string>("");
 	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const [_, setIsFormulaDetected] = useState<boolean>(false);
+	const [searchOnGoogle, setSearchOnGoogle] = useState<boolean>(false);
+	const [url, setUrl] = useState<string>('');
 
 	// Memoizing search logic to avoid unnecessary re-renders
 	const debouncedSearch = useCallback(
@@ -26,6 +29,8 @@ function App() {
 		if (!term.trim()) {
 			setApps([]);
 			setStatus("");
+			setSearchOnGoogle(false);
+			setUrl('');
 			return;
 		}
 
@@ -59,7 +64,18 @@ function App() {
 				setStatus("");
 			} else {
 				setApps([]);
-				setStatus(`Aucune application trouvée pour "${term}"`);
+				// ✅ Utilisation de la version fonctionnelle pour s'assurer d'avoir la valeur actuelle
+				setIsFormulaDetected((prev) => {
+					if (!prev) {
+						const url = `https://www.google.com/search?q=${encodeURIComponent(term)}`;
+						setStatus(`Ouvrir Google pour "${term}"`);
+						setSearchOnGoogle(true);
+						setUrl(url);
+						// 
+					} 
+					
+					return prev;
+				});
 			}
 		} catch (error) {
 			setStatus(
@@ -76,6 +92,8 @@ function App() {
 		try {
 			await (window.ipcRenderer as any).launchApp(app);
 			setSearchTerm("");
+			setSearchOnGoogle(false);
+			setUrl('');
 			setApps([]);
 		} catch (error) {
 			setStatus(`Impossible de lancer ${app.name}`);
@@ -106,7 +124,7 @@ function App() {
 	return (
 		<div className="flex justify-center items-center bg-opacity-50">
 			<div className="w-screen bg-zinc-900 rounded-lg shadow-lg overflow-hidden">
-				<InputSearch searchTerm={searchTerm} handleSearch={handleSearch} />
+				<InputSearch searchTerm={searchTerm} handleSearch={handleSearch} setIsFormulaDetected={setIsFormulaDetected} />
 
 				<ListApp
 					apps={apps}
@@ -114,6 +132,8 @@ function App() {
 					status={status}
 					handleLaunch={handleLaunch}
 					listHeightClass={listHeightClass}
+					searchOnGoogle={searchOnGoogle}
+					url={url}
 				/>
 			</div>
 		</div>

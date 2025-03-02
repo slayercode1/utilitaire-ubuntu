@@ -1,1 +1,26 @@
-"use strict";const n=require("electron");n.contextBridge.exposeInMainWorld("ipcRenderer",{on(...e){const[r,c]=e;return n.ipcRenderer.on(r,(t,...i)=>c(t,...i))},off(...e){const[r,...c]=e;return n.ipcRenderer.off(r,...c)},send(...e){const[r,...c]=e;return n.ipcRenderer.send(r,...c)},invoke(...e){const[r,...c]=e;return n.ipcRenderer.invoke(r,...c)},getInstalledApps:(e="")=>n.ipcRenderer.invoke("get-installed-apps",e),launchApp:e=>n.ipcRenderer.invoke("launch-app",e),getAppIcon:e=>n.ipcRenderer.invoke("get-app-icon",e)});
+"use strict";
+const electron = require("electron");
+electron.contextBridge.exposeInMainWorld("ipcRenderer", {
+  on(...args) {
+    const [channel, listener] = args;
+    return electron.ipcRenderer.on(channel, (event, ...args2) => listener(event, ...args2));
+  },
+  off(...args) {
+    const [channel, ...omit] = args;
+    return electron.ipcRenderer.off(channel, ...omit);
+  },
+  send(...args) {
+    const [channel, ...omit] = args;
+    return electron.ipcRenderer.send(channel, ...omit);
+  },
+  invoke(...args) {
+    const [channel, ...omit] = args;
+    return electron.ipcRenderer.invoke(channel, ...omit);
+  },
+  // Obtenir les applications installées
+  getInstalledApps: (searchTerm = "") => electron.ipcRenderer.invoke("get-installed-apps", searchTerm),
+  // Lancer une application
+  launchApp: (appInfo) => electron.ipcRenderer.invoke("launch-app", appInfo),
+  getAppIcon: (iconPath) => electron.ipcRenderer.invoke("get-app-icon", iconPath),
+  openLink: (url) => electron.ipcRenderer.send("open-link", url)
+});

@@ -37,6 +37,20 @@
     "vite-plugin-electron": "^0.28.6",
     "vite-plugin-electron-renderer": "^0.14.5"
   },
-  "main": "dist-electron/main.js"
+  "main": "dist-electron/main.js",
+  
+    "build": {
+      "appId": "com.example.app",
+      "files": [
+        "dist/**/*",
+        "node_modules/**/*"
+      ],
+    
+      "linux": {
+        "icon": "build/logo2.png"
+      }
+    }
+  
+  
 }
 

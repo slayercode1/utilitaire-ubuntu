@@ -28,5 +28,7 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
   launchApp: (appInfo: AppInfo) => 
     ipcRenderer.invoke('launch-app', appInfo),
 
-  getAppIcon: (iconPath: string) => ipcRenderer.invoke('get-app-icon', iconPath)
+  getAppIcon: (iconPath: string) => ipcRenderer.invoke('get-app-icon', iconPath),
+
+  openLink: (url: string) => ipcRenderer.send('open-link', url)
 })

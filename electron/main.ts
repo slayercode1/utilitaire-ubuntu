@@ -59,7 +59,9 @@ app.whenReady().then(() => {
 	app.on("activate", () => {
 		if (BrowserWindow.getAllWindows().length === 0) createWindow();
 	});
+
 });
+
 
 function createTray() {
 	const iconPath = path.join(process.env.VITE_PUBLIC, "logo.png") // Remplace avec ton icône
@@ -93,6 +95,7 @@ function createWindow() {
 	const { width, height } = screen.getPrimaryDisplay().workAreaSize;
 	const x = Math.round((width - 700) / 2);
 	const y = Math.round((height - 400) / 2);
+	console.log(path.join(process.env.VITE_PUBLIC, "logo2.png"),)
 	win = new BrowserWindow({
 		icon: path.join(process.env.VITE_PUBLIC, "logo2.png"),
 		webPreferences: {
@@ -197,6 +200,12 @@ ipcMain.handle("get-app-icon", async (_, iconPath) => {
 	}
 });
 
+ipcMain.on('open-link', (event, url) => {
 
+	console.log('Opening link:', url);
+
+	exec(`xdg-open ${url}`);
+    
+});
 
   
