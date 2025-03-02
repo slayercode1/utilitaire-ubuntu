@@ -293,7 +293,7 @@ ipcMain.handle("get-installed-apps", async (_, searchTerm = "") => {
 });
 ipcMain.handle("launch-app", async (_, appInfo) => {
   return new Promise((resolve, reject) => {
-    exec(`${appInfo.exec} &`, { detached: true, stdio: "ignore" }, (error) => {
+    exec(`${appInfo.exec} &`, (error) => {
       if (error) {
         console.error("Erreur lors du lancement de l'application:", error);
         reject(error);

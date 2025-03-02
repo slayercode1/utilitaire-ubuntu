@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import type { AppInfoWithIcon } from "../interfaces/app-info";
+import { IconDefault } from '../assets/icon-default';
 
 export function ListApp({
   apps,
@@ -41,24 +42,24 @@ export function ListApp({
   }, [apps, selectedIndex, handleLaunch]);
 
   // Sync scroll position with selected index
-	useEffect(() => {
-		if (listRef.current) {
-			const selectedItem = listRef.current.children[selectedIndex] as HTMLElement;
-			if (selectedItem) {
-				// Ensure the selected item is within the visible range by scrolling
-				selectedItem.scrollIntoView({
-					behavior: "smooth",
-					block: "nearest", // Ensure it scrolls only when necessary
-				});
-			}
-		}
-	}, [selectedIndex]);
+  useEffect(() => {
+    if (listRef.current) {
+      const selectedItem = listRef.current.children[selectedIndex] as HTMLElement;
+      if (selectedItem) {
+        // Ensure the selected item is within the visible range by scrolling
+        selectedItem.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest", // Ensure it scrolls only when necessary
+        });
+      }
+    }
+  }, [selectedIndex]);
 
   return (
     <>
       {!isLoading && apps.length > 0 && (
         <ul
-        ref={listRef}
+          ref={listRef}
           className={`divide-y divide-gray-200 overflow-auto no-scrollbar ${listHeightClass}`}
         >
           {apps.map((app, index) => (
@@ -81,41 +82,7 @@ export function ListApp({
 
                     :
 
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-                      <defs>
-                        <linearGradient id="gradientBackground" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stop-color="#5D5D5D" />
-                          <stop offset="100%" stop-color="#333333" />
-                        </linearGradient>
-
-                        <linearGradient id="gradientOverlay" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stop-color="white" stop-opacity="0.2" />
-                          <stop offset="100%" stop-color="white" stop-opacity="0" />
-                        </linearGradient>
-                      </defs>
-
-                      <rect x="25" y="25" width="150" height="150" rx="35" fill="url(#gradientBackground)" />
-
-                      <rect x="25" y="25" width="150" height="75" rx="35" fill="url(#gradientOverlay)" />
-
-                      <circle cx="100" cy="85" r="40" fill="white" opacity="0.1" />
-                      <circle cx="130" cy="130" r="25" fill="white" opacity="0.1" />
-
-                      <rect x="62" y="72" width="20" height="20" rx="5" fill="white" />
-                      <rect x="90" y="72" width="20" height="20" rx="5" fill="white" />
-                      <rect x="118" y="72" width="20" height="20" rx="5" fill="white" />
-
-                      <rect x="62" y="100" width="20" height="20" rx="5" fill="white" />
-                      <rect x="90" y="100" width="20" height="20" rx="5" fill="white" />
-                      <rect x="118" y="100" width="20" height="20" rx="5" fill="white" />
-
-                      <rect x="62" y="128" width="20" height="20" rx="5" fill="white" />
-                      <rect x="90" y="128" width="20" height="20" rx="5" fill="white" />
-                      <rect x="118" y="128" width="20" height="20" rx="5" fill="white" />
-
-                      <circle cx="35" cy="40" r="5" fill="white" opacity="0.6" />
-                      <circle cx="50" cy="35" r="3" fill="white" opacity="0.6" />
-                    </svg>
+                    <IconDefault />
                 }
               </div>
               <div className="ml-4 flex-1">
