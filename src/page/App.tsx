@@ -68,10 +68,8 @@ function App() {
 				setIsFormulaDetected((prev) => {
 					if (!prev) {
 						const url = `https://www.google.com/search?q=${encodeURIComponent(term)}`;
-						setStatus(`Ouvrir Google pour "${term}"`);
 						setSearchOnGoogle(true);
 						setUrl(url);
-						// 
 					} 
 					
 					return prev;
@@ -121,6 +119,14 @@ function App() {
 		[apps.length],
 	);
 
+	const handleSearchOnGoogle = useCallback((url: string) => {
+		
+		(window.ipcRenderer as any).openLink(url)
+		setSearchOnGoogle(false);
+		setUrl('');
+		setSearchTerm('');
+	}, [])
+
 	return (
 		<div className="flex justify-center items-center bg-opacity-50">
 			<div className="w-screen bg-zinc-900 rounded-lg shadow-lg overflow-hidden">
@@ -134,6 +140,7 @@ function App() {
 					listHeightClass={listHeightClass}
 					searchOnGoogle={searchOnGoogle}
 					url={url}
+					handleSearch={handleSearchOnGoogle}
 				/>
 			</div>
 		</div>

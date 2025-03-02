@@ -11,7 +11,7 @@ import {
 } from "electron";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { exec } from "node:child_process";
+import {spawn } from "node:child_process";
 import * as fs from "node:fs";
 import { findAllApplications } from "./findApplication";
 import { setAutoLaunch } from "./autolauch";
@@ -174,18 +174,28 @@ ipcMain.handle("get-installed-apps", async (_, searchTerm = "") => {
 	}
 });
 
-ipcMain.handle("launch-app", async (_, appInfo: AppInfo) => {
-	return new Promise((resolve, reject) => {
-		exec(`${appInfo.exec} &`, (error) => {
-			if (error) {
-				console.error("Erreur lors du lancement de l'application:", error);
-				reject(error);
-			} else {
-				resolve(true);
-			}
-		});
-	});
+
+ipcMain.handle("launch-app", async (_, appInfo) => {
+    return new Promise((resolve, reject) => {
+        const child = spawn(appInfo.exec, [], {
+            detached: true,
+            stdio: 'ignore',
+            shell: true
+        });
+
+        child.unref(); // Permet au processus enfant de continuer à s'exécuter même si le processus parent se termine
+
+        child.on('error', (error) => {
+            console.error("Erreur lors du lancement de l'application:", error);
+            reject(error);
+        });
+
+        child.on('spawn', () => {
+            resolve(true);
+        });
+    });
 });
+
 
 ipcMain.handle("get-app-icon", async (_, iconPath) => {
 	try {
@@ -200,12 +210,14 @@ ipcMain.handle("get-app-icon", async (_, iconPath) => {
 	}
 });
 
-ipcMain.on('open-link', (event, url) => {
+ipcMain.on('open-link', (_, url) => {
+    const child = spawn('xdg-open', [url], {
+        detached: true,
+        stdio: 'ignore',
+        shell: true
+    });
 
-	console.log('Opening link:', url);
-
-	exec(`xdg-open ${url}`);
-    
+    child.unref(); // Permet au processus enfant de continuer à s'exécuter même si le processus parent se termine
 });
 
   

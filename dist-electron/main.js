@@ -2,7 +2,7 @@ import { app, powerSaveBlocker, globalShortcut, BrowserWindow, Tray, Menu, scree
 import * as path from "node:path";
 import path__default from "node:path";
 import { fileURLToPath } from "node:url";
-import { exec } from "node:child_process";
+import { spawn } from "node:child_process";
 import * as fs from "node:fs";
 import { existsSync } from "node:fs";
 import fs$1 from "node:fs/promises";
@@ -117,11 +117,11 @@ async function parseDesktopFile(filePath) {
     if (!nameMatch || !execMatch || noDisplayMatch && noDisplayMatch[1].toLowerCase() === "true") {
       return null;
     }
-    const exec2 = execMatch[1].replace(/%[fFuU]/g, "").trim();
+    const exec = execMatch[1].replace(/%[fFuU]/g, "").trim();
     const iconName = iconMatch ? iconMatch[1] : "";
     return {
       name: nameMatch[1],
-      exec: exec2,
+      exec,
       iconPath: await findIconPath(iconName)
     };
   } catch {
@@ -293,13 +293,18 @@ ipcMain.handle("get-installed-apps", async (_, searchTerm = "") => {
 });
 ipcMain.handle("launch-app", async (_, appInfo) => {
   return new Promise((resolve, reject) => {
-    exec(`${appInfo.exec} &`, (error) => {
-      if (error) {
-        console.error("Erreur lors du lancement de l'application:", error);
-        reject(error);
-      } else {
-        resolve(true);
-      }
+    const child = spawn(appInfo.exec, [], {
+      detached: true,
+      stdio: "ignore",
+      shell: true
+    });
+    child.unref();
+    child.on("error", (error) => {
+      console.error("Erreur lors du lancement de l'application:", error);
+      reject(error);
+    });
+    child.on("spawn", () => {
+      resolve(true);
     });
   });
 });
@@ -313,9 +318,13 @@ ipcMain.handle("get-app-icon", async (_, iconPath) => {
     return null;
   }
 });
-ipcMain.on("open-link", (event, url) => {
-  console.log("Opening link:", url);
-  exec(`xdg-open ${url}`);
+ipcMain.on("open-link", (_, url) => {
+  const child = spawn("xdg-open", [url], {
+    detached: true,
+    stdio: "ignore",
+    shell: true
+  });
+  child.unref();
 });
 export {
   MAIN_DIST,

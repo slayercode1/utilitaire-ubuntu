@@ -7,6 +7,7 @@ export function ListApp({
   isLoading,
   status,
   handleLaunch,
+  handleSearch,
   listHeightClass,
   searchOnGoogle,
   url
@@ -15,6 +16,7 @@ export function ListApp({
   isLoading: boolean;
   status: string | null;
   handleLaunch: (app: AppInfoWithIcon) => void;
+  handleSearch: (url: string) => void;
   listHeightClass: string;
   searchOnGoogle: boolean
   url: string
@@ -24,7 +26,7 @@ export function ListApp({
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (apps.length === 0) return;
+     
 
       if (event.key === "ArrowDown") {
         setSelectedIndex((prevIndex) => (prevIndex + 1) % apps.length);
@@ -33,13 +35,21 @@ export function ListApp({
           (prevIndex) => (prevIndex - 1 + apps.length) % apps.length,
         );
       } else if (event.key === "Enter") {
-        handleLaunch(apps[selectedIndex]);
+        console.log('Enter key pressed');
+        console.log('searchOnGoogle', searchOnGoogle);
+        if (searchOnGoogle) {
+          console.log('Launching Google search with URL:', url);
+          handleSearch(url);
+        } else {
+          console.log('Launching app:', apps[selectedIndex].name);
+          handleLaunch(apps[selectedIndex]);
+        }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [apps, selectedIndex, handleLaunch]);
+  }, [apps, selectedIndex, handleLaunch, handleSearch, searchOnGoogle, url]);
 
   // Sync scroll position with selected index
   useEffect(() => {
@@ -68,11 +78,6 @@ export function ListApp({
               className={`flex items-center p-2 cursor-pointer ${selectedIndex === index ? "bg-blue-600" : ""
                 }`}
               onClick={() => handleLaunch(app)}
-              onKeyUp={(event) => {
-                if (event.key === "Enter") {
-                  handleLaunch(app);
-                }
-              }}
             >
               <div className="flex-shrink-0 w-10 h-10 text-white flex items-center justify-center font-semibold">
                 {
@@ -97,12 +102,11 @@ export function ListApp({
         <div className="p-3 text-white rounded-md">{status}</div>
       )}
 
-
       {
         searchOnGoogle && (
           <div
             className="flex flex-col p-3 text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-md cursor-pointer"
-            onClick={() => (window.ipcRenderer as any).openLink(url)}
+            onClick={() => handleSearch(url)}
           >
             <div className="flex items-center gap-4">
               <svg
@@ -121,13 +125,11 @@ export function ListApp({
               <div className="flex flex-col">
                 <span>Rechercher sur Google</span>
                 <span className="text-sm text-gray-200 truncate">{url}</span>
-
               </div>
             </div>
           </div>
         )
       }
-
     </>
   );
 }
