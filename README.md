@@ -22,7 +22,7 @@ npm run dev
 Téléchargez le fichier `.deb` depuis la [dernière release](https://github.com/slayercode1/utilitaire-ubuntu/releases/tag/v.1.0.0) et installez-le.
 
 
-## Fonctionnalités
+## Fonctionnalités A faire
 - Ajouter la bonne icône
 - Recherche de fichiers texte ou autres types de fichiers
 - Recherche et exécution d'applications `.jar`
