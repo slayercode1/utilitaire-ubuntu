@@ -237,10 +237,10 @@ ipcMain.handle("open-file", async (_, filePath) => {
 	return new Promise((resolve, reject) => {
 	  try {
 
-		console.log("Ouverture du fichier:", filePath);
-		let child;
+		const extension = path.extname(filePath).toLowerCase();
+		let child: any;
 
-		if (path.extname(filePath).toLowerCase() === ".jar") {
+		if (extension === '.jar') {
 			child = spawn("java", ["-jar", filePath], {
 				detached: true,
 				stdio: "ignore",
@@ -248,6 +248,38 @@ ipcMain.handle("open-file", async (_, filePath) => {
 			});
 	
 			child.unref(); // Permet au processus enfant de
+		} else if (['.jpg', '.jpeg', '.png',].includes(extension)) {
+
+			console.log('opening image' + filePath)
+			child = spawn("eog", [`"${filePath}"`], {
+				detached: true,
+				stdio: "ignore",
+				shell: true,
+			});
+	
+			child.unref(); // Permet au processus enfant de
+		} else if (['.js', '.py', '.java', '.html', '.css', '.ts', '.jsx', '.tsx', '.sh'].includes(extension)) {
+			try {
+				// D'abord essayer VSCode
+				child = spawn('code', [filePath], {
+				  detached: true,
+				  stdio: 'ignore'
+				});
+			  } catch {
+				// Essayer d'autres éditeurs courants
+				const editors = ['webstorm', 'gedit', 'kate', 'geany', 'atom', 'sublime_text'];
+				for (const editor of editors) {
+				  try {
+					child = spawn(editor, [filePath], {
+					  detached: true,
+					  stdio: 'ignore'
+					});
+					break;
+				  } catch (e) {
+					continue;
+				  }
+				}
+			  }
 		} else {
 			child = spawn("xdg-open", [filePath], {
 				detached: true,
@@ -258,7 +290,7 @@ ipcMain.handle("open-file", async (_, filePath) => {
   
 		child.unref(); // Permet au processus enfant de continuer à s'exécuter même si le processus parent se termine
   
-		child.on("error", (error) => {
+		child.on("error", (error: any) => {
 		  console.error("Erreur lors de l'ouverture du fichier:", error);
 		  reject(error);
 		});

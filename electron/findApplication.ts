@@ -234,10 +234,10 @@ export async function findAllApplications(searchTerm = ""): Promise<AppInfo[]> {
 	);
 
 
-	// console.log('------------------------------------')
-	// console.log('apps-name', apps.map(app => app.name))
-	// console.log('apps-exec', apps.map(app => app.exec))
-	// console.log('------------------------------------')
+	console.log('------------------------------------')
+	console.log('apps-name', apps.map(app => app.name))
+	console.log('apps-exec', apps.map(app => app.exec))
+	console.log('------------------------------------')
 
 	return apps
 

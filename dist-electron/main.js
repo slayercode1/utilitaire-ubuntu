@@ -142,6 +142,10 @@ async function findAllApplications(searchTerm = "") {
   const apps = Array.from(appMap.values()).sort(
     (a, b) => a.name.localeCompare(b.name)
   );
+  console.log("------------------------------------");
+  console.log("apps-name", apps.map((app2) => app2.name));
+  console.log("apps-exec", apps.map((app2) => app2.exec));
+  console.log("------------------------------------");
   return apps;
 }
 function setAutoLaunch(enabled) {
@@ -433,15 +437,43 @@ ipcMain.on("open-link", (_, url) => {
 ipcMain.handle("open-file", async (_, filePath) => {
   return new Promise((resolve, reject) => {
     try {
-      console.log("Ouverture du fichier:", filePath);
+      const extension = path__default.extname(filePath).toLowerCase();
       let child;
-      if (path__default.extname(filePath).toLowerCase() === ".jar") {
+      if (extension === ".jar") {
         child = spawn("java", ["-jar", filePath], {
           detached: true,
           stdio: "ignore",
           shell: true
         });
         child.unref();
+      } else if ([".jpg", ".jpeg", ".png"].includes(extension)) {
+        console.log("opening image" + filePath);
+        child = spawn("eog", [`"${filePath}"`], {
+          detached: true,
+          stdio: "ignore",
+          shell: true
+        });
+        child.unref();
+      } else if ([".js", ".py", ".java", ".html", ".css", ".ts", ".jsx", ".tsx", ".sh"].includes(extension)) {
+        try {
+          child = spawn("code", [filePath], {
+            detached: true,
+            stdio: "ignore"
+          });
+        } catch {
+          const editors = ["webstorm", "gedit", "kate", "geany", "atom", "sublime_text"];
+          for (const editor of editors) {
+            try {
+              child = spawn(editor, [filePath], {
+                detached: true,
+                stdio: "ignore"
+              });
+              break;
+            } catch (e) {
+              continue;
+            }
+          }
+        }
       } else {
         child = spawn("xdg-open", [filePath], {
           detached: true,

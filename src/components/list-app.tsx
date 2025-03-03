@@ -4,7 +4,7 @@ import { FileIcon } from "../assets/FileIcon";
 
 // Étendre l'interface pour inclure les fichiers
 export interface ItemInfo {
-  type: "app" | "file";
+  type: "apps" | "file";
   name: string;
   path?: string;       // Pour les fichiers
   exec?: string;       // Pour les apps
@@ -83,9 +83,7 @@ export function ListApp({
 
   // Fonction pour obtenir le sous-texte approprié
   const getSubtext = (item: ItemInfo) => {
-    if (item.type === "app") {
-      return item.exec;
-    } else {
+    if (item.type === "file") {
       return item.path;
     }
   };

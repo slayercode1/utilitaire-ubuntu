@@ -86,7 +86,7 @@ function App() {
 	// Lancer une application
 	const handleLaunch = async (item: ItemInfo) => {
 		try {
-		  if (item.type === "app") {
+		  if (item.type === "apps") {
 			await (window.ipcRenderer as any).launchApp(item);
 		  } else if (item.type === "file") {
 			await (window.ipcRenderer as any).openFile(item.path);

@@ -24,5 +24,4 @@ Téléchargez le fichier `.deb` depuis la [dernière release](https://github.com
 
 ## Fonctionnalités A faire
 - Ajouter la bonne icône
-- les fichier script doit etre ouvert avec un ide
 
