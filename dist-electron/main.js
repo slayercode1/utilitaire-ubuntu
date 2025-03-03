@@ -120,6 +120,7 @@ async function parseDesktopFile(filePath) {
     const exec = execMatch[1].replace(/%[fFuU]/g, "").trim();
     const iconName = iconMatch ? iconMatch[1] : "";
     return {
+      type: "apps",
       name: nameMatch[1],
       exec,
       iconPath: await findIconPath(iconName)
@@ -138,9 +139,10 @@ async function findAllApplications(searchTerm = "") {
       appMap.set(key, app2);
     }
   });
-  return Array.from(appMap.values()).sort(
+  const apps = Array.from(appMap.values()).sort(
     (a, b) => a.name.localeCompare(b.name)
   );
+  return apps;
 }
 function setAutoLaunch(enabled) {
   if (process.platform === "linux") {
@@ -157,7 +159,7 @@ function setAutoLaunch(enabled) {
   Type=Application
   Name=${appName}
   Exec=${appPath}
-  Icon=${path.join(process.env.VITE_PUBLIC, "logo2.png")}
+  Icon=${path.join(process.env.VITE_PUBLIC, "logo.png")}
   Comment=Application lancée automatiquement
   X-GNOME-Autostart-enabled=true`;
         fs.writeFileSync(autostartFile, desktopEntry);
@@ -166,6 +168,99 @@ function setAutoLaunch(enabled) {
       console.error("Erreur lors de la configuration de l'autostart:", error);
     }
   }
+}
+const directoriesToSearch = [
+  path__default.join(process.env.HOME || "", "Documents"),
+  path__default.join(process.env.HOME || "", "Downloads"),
+  path__default.join(process.env.HOME || "", "Desktop"),
+  path__default.join(process.env.HOME || "", "Pictures"),
+  path__default.join(process.env.HOME || "", "Téléchargements"),
+  path__default.join(process.env.HOME || "", "Bureau"),
+  path__default.join(process.env.HOME || "", "Images")
+  // Ajoutez d'autres répertoires selon vos besoins
+];
+const fileExtensionsToInclude = [
+  ".jar",
+  ".pdf",
+  ".doc",
+  ".docx",
+  ".txt",
+  ".csv",
+  ".xls",
+  ".xlsx",
+  ".ppt",
+  ".pptx",
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".sh",
+  ".py",
+  ".js",
+  ".html",
+  ".css"
+];
+function isIncludedFileType(fileName) {
+  const ext = path__default.extname(fileName).toLowerCase();
+  return fileExtensionsToInclude.includes(ext) || fileExtensionsToInclude.length === 0;
+}
+async function scanDirectory(directory, searchTerm, maxDepth = 4, currentDepth = 0, maxResults = 500, results = []) {
+  if (currentDepth > maxDepth || results.length >= maxResults) {
+    return results;
+  }
+  if (!existsSync(directory)) {
+    return results;
+  }
+  try {
+    const files = await fs$1.readdir(directory);
+    for (const file of files) {
+      if (results.length >= maxResults) break;
+      const filePath = path__default.join(directory, file);
+      try {
+        const stats = await fs$1.stat(filePath);
+        if (stats.isDirectory()) {
+          if (!file.startsWith(".")) {
+            await scanDirectory(
+              filePath,
+              searchTerm,
+              maxDepth,
+              currentDepth + 1,
+              maxResults,
+              results
+            );
+          }
+        } else if (stats.isFile() && isIncludedFileType(file)) {
+          if (!searchTerm || file.toLowerCase().includes(searchTerm.toLowerCase())) {
+            const fileExt = path__default.extname(file).toLowerCase();
+            results.push({
+              type: "file",
+              name: file,
+              path: filePath,
+              extension: fileExt,
+              size: stats.size,
+              lastModified: stats.mtime
+            });
+          }
+        }
+      } catch (error) {
+        continue;
+      }
+    }
+  } catch (error) {
+    console.error(`Erreur lors de la lecture du répertoire ${directory}:`, error);
+  }
+  return results;
+}
+async function findFiles(searchTerm = "") {
+  const allResults = [];
+  const searchPromises = directoriesToSearch.map(
+    (directory) => scanDirectory(directory, searchTerm)
+  );
+  const results = await Promise.all(searchPromises);
+  results.forEach((fileList) => {
+    allResults.push(...fileList);
+  });
+  allResults.sort((a, b) => a.name.localeCompare(b.name));
+  return allResults;
 }
 const __dirname = path__default.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path__default.join(__dirname, "..");
@@ -217,19 +312,24 @@ function createTray() {
     if (win) (win == null ? void 0 : win.isVisible()) ? win.hide() : win.show();
   });
 }
+let icon = path__default.join(process.env.VITE_PUBLIC, "logo.png");
+if (process.platform === "win32") {
+  icon = path__default.join(process.env.VITE_PUBLIC, "generated", "icon.ico");
+} else if (process.platform === "darwin") {
+  icon = path__default.join(process.env.VITE_PUBLIC, "generated", "icon.icns");
+}
 function createWindow() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   const x = Math.round((width - 700) / 2);
   const y = Math.round((height - 400) / 2);
-  console.log(path__default.join(process.env.VITE_PUBLIC, "logo2.png"));
   win = new BrowserWindow({
-    icon: path__default.join(process.env.VITE_PUBLIC, "logo2.png"),
+    icon,
     webPreferences: {
       preload: path__default.join(__dirname, "preload.mjs"),
       nodeIntegration: true,
       backgroundThrottling: false
     },
-    width: 700,
+    width: 600,
     height: 400,
     frame: false,
     alwaysOnTop: true,
@@ -257,9 +357,9 @@ function createWindow() {
   win.on("show", () => {
     const { width: width2, height: height2 } = screen.getPrimaryDisplay().workAreaSize;
     if (win) win.setBounds({
-      width: 700,
+      width: 600,
       height: 400,
-      x: Math.round((width2 - 700) / 2),
+      x: Math.round((width2 - 600) / 2),
       y: Math.round((height2 - 400) / 2)
     });
     if (win) win.setOpacity(1);
@@ -285,7 +385,11 @@ app.on("will-quit", () => {
 });
 ipcMain.handle("get-installed-apps", async (_, searchTerm = "") => {
   try {
-    return await findAllApplications(searchTerm);
+    const [apps, files] = await Promise.all([
+      findAllApplications(searchTerm),
+      findFiles(searchTerm)
+    ]);
+    return [...apps, ...files];
   } catch (error) {
     console.error("Erreur lors de la recherche des applications:", error);
     return [];
@@ -325,6 +429,39 @@ ipcMain.on("open-link", (_, url) => {
     shell: true
   });
   child.unref();
+});
+ipcMain.handle("open-file", async (_, filePath) => {
+  return new Promise((resolve, reject) => {
+    try {
+      console.log("Ouverture du fichier:", filePath);
+      let child;
+      if (path__default.extname(filePath).toLowerCase() === ".jar") {
+        child = spawn("java", ["-jar", filePath], {
+          detached: true,
+          stdio: "ignore",
+          shell: true
+        });
+        child.unref();
+      } else {
+        child = spawn("xdg-open", [filePath], {
+          detached: true,
+          stdio: "ignore",
+          shell: true
+        });
+      }
+      child.unref();
+      child.on("error", (error) => {
+        console.error("Erreur lors de l'ouverture du fichier:", error);
+        reject(error);
+      });
+      child.on("spawn", () => {
+        resolve(true);
+      });
+    } catch (error) {
+      console.error("Erreur lors de l'ouverture du fichier:", error);
+      reject(error);
+    }
+  });
 });
 export {
   MAIN_DIST,

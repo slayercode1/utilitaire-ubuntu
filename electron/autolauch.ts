@@ -20,7 +20,7 @@ export function setAutoLaunch(enabled: boolean) {
   Type=Application
   Name=${appName}
   Exec=${appPath}
-  Icon=${path.join(process.env.VITE_PUBLIC, "logo2.png")}
+  Icon=${path.join(process.env.VITE_PUBLIC, "logo.png")}
   Comment=Application lancée automatiquement
   X-GNOME-Autostart-enabled=true`;
           

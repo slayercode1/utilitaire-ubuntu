@@ -24,6 +24,5 @@ Téléchargez le fichier `.deb` depuis la [dernière release](https://github.com
 
 ## Fonctionnalités A faire
 - Ajouter la bonne icône
-- Recherche de fichiers texte ou autres types de fichiers
-- Recherche et exécution d'applications `.jar`
+- les fichier script doit etre ouvert avec un ide
 

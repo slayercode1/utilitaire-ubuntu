@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { InputSearch } from "../components/search-input";
 import type { AppInfoWithIcon } from "../interfaces/app-info";
-import { ListApp } from "../components/list-app";
+import { ItemInfo, ListApp } from "../components/list-app";
 
 function App() {
-	const [apps, setApps] = useState<AppInfoWithIcon[]>([]);
+	const [apps, setApps] = useState<ItemInfo[]>([]);
 	const [searchTerm, setSearchTerm] = useState<string>("");
 	const [status, setStatus] = useState<string>("");
 	const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -64,7 +64,7 @@ function App() {
 				setStatus("");
 			} else {
 				setApps([]);
-				// ✅ Utilisation de la version fonctionnelle pour s'assurer d'avoir la valeur actuelle
+				// Utilisation de la version fonctionnelle pour s'assurer d'avoir la valeur actuelle
 				setIsFormulaDetected((prev) => {
 					if (!prev) {
 						const url = `https://www.google.com/search?q=${encodeURIComponent(term)}`;
@@ -76,9 +76,7 @@ function App() {
 				});
 			}
 		} catch (error) {
-			setStatus(
-				"Une erreur est survenue lors de la recherche des applications",
-			);
+			setStatus("Une erreur est survenue lors de la recherche des applications");
 			setApps([]);
 		} finally {
 			setIsLoading(false);
@@ -86,17 +84,18 @@ function App() {
 	}, []);
 
 	// Lancer une application
-	const handleLaunch = useCallback(async (app: AppInfoWithIcon) => {
+	const handleLaunch = async (item: ItemInfo) => {
 		try {
-			await (window.ipcRenderer as any).launchApp(app);
-			setSearchTerm("");
-			setSearchOnGoogle(false);
-			setUrl('');
-			setApps([]);
+		  if (item.type === "app") {
+			await (window.ipcRenderer as any).launchApp(item);
+		  } else if (item.type === "file") {
+			await (window.ipcRenderer as any).openFile(item.path);
+		  }
 		} catch (error) {
-			setStatus(`Impossible de lancer ${app.name}`);
+		  console.error("Erreur lors de l'exécution:", error);
+		  setStatus(`Impossible de lancer ${item.name}`);
 		}
-	}, []);
+	  };
 
 	// Effect pour gérer les changements de terme de recherche
 	useEffect(() => {
@@ -133,7 +132,7 @@ function App() {
 				<InputSearch searchTerm={searchTerm} handleSearch={handleSearch} setIsFormulaDetected={setIsFormulaDetected} />
 
 				<ListApp
-					apps={apps}
+					items={apps}
 					isLoading={isLoading}
 					status={status}
 					handleLaunch={handleLaunch}

@@ -1,9 +1,20 @@
 import { useState, useEffect, useRef } from "react";
-import type { AppInfoWithIcon } from "../interfaces/app-info";
 import { IconDefault } from '../assets/icon-default';
+import { FileIcon } from "../assets/FileIcon";
+
+// Étendre l'interface pour inclure les fichiers
+export interface ItemInfo {
+  type: "app" | "file";
+  name: string;
+  path?: string;       // Pour les fichiers
+  exec?: string;       // Pour les apps
+  extension?: string;  // Pour les fichiers
+  mimeType?: string;   // Pour les fichiers
+  iconDataUrl?: string;
+}
 
 export function ListApp({
-  apps,
+  items,
   isLoading,
   status,
   handleLaunch,
@@ -12,48 +23,42 @@ export function ListApp({
   searchOnGoogle,
   url
 }: {
-  apps: AppInfoWithIcon[];
+  items: ItemInfo[];
   isLoading: boolean;
   status: string | null;
-  handleLaunch: (app: AppInfoWithIcon) => void;
+  handleLaunch: (item: ItemInfo) => void;
   handleSearch: (url: string) => void;
   listHeightClass: string;
-  searchOnGoogle: boolean
-  url: string
+  searchOnGoogle: boolean;
+  url: string;
 }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const listRef = useRef<HTMLUListElement | null>(null);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-     
-
       if (event.key === "ArrowDown") {
-        setSelectedIndex((prevIndex) => (prevIndex + 1) % apps.length);
+        setSelectedIndex((prevIndex) => (prevIndex + 1) % items.length);
       } else if (event.key === "ArrowUp") {
         setSelectedIndex(
-          (prevIndex) => (prevIndex - 1 + apps.length) % apps.length,
+          (prevIndex) => (prevIndex - 1 + items.length) % items.length,
         );
       } else if (event.key === "Enter") {
-        console.log('Enter key pressed');
-        console.log('searchOnGoogle', searchOnGoogle);
         if (searchOnGoogle) {
-          console.log('Launching Google search with URL:', url);
           handleSearch(url);
-        } else {
-          console.log('Launching app:', apps[selectedIndex].name);
-          handleLaunch(apps[selectedIndex]);
+        } else if (items.length > 0) {
+          handleLaunch(items[selectedIndex]);
         }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [apps, selectedIndex, handleLaunch, handleSearch, searchOnGoogle, url]);
+  }, [items, selectedIndex, handleLaunch, handleSearch, searchOnGoogle, url]);
 
   // Sync scroll position with selected index
   useEffect(() => {
-    if (listRef.current) {
+    if (listRef.current && items.length > 0) {
       const selectedItem = listRef.current.children[selectedIndex] as HTMLElement;
       if (selectedItem) {
         // Ensure the selected item is within the visible range by scrolling
@@ -63,36 +68,55 @@ export function ListApp({
         });
       }
     }
-  }, [selectedIndex]);
+  }, [selectedIndex, items.length]);
+
+  // Fonction pour obtenir l'icône appropriée selon le type d'élément
+  const getIcon = (item: ItemInfo) => {
+    if (item.iconDataUrl) {
+      return <img src={item.iconDataUrl} alt={item.name} />;
+    } else if (item.type === "file") {
+      return <FileIcon extension={item.extension || ""} />;
+    } else {
+      return <IconDefault />;
+    }
+  };
+
+  // Fonction pour obtenir le sous-texte approprié
+  const getSubtext = (item: ItemInfo) => {
+    if (item.type === "app") {
+      return item.exec;
+    } else {
+      return item.path;
+    }
+  };
 
   return (
     <>
-      {!isLoading && apps.length > 0 && (
+      {!isLoading && items.length > 0 && (
         <ul
           ref={listRef}
           className={`divide-y divide-gray-200 overflow-auto no-scrollbar ${listHeightClass}`}
         >
-          {apps.map((app, index) => (
+          {items.map((item, index) => (
             <li
-              key={app.name}
-              className={`flex items-center p-2 cursor-pointer ${selectedIndex === index ? "bg-blue-600" : ""
-                }`}
-              onClick={() => handleLaunch(app)}
+              key={`${item.type}-${item.name}-${index}`}
+              className={`flex items-center p-2 cursor-pointer ${
+                selectedIndex === index ? "bg-blue-600" : ""
+              }`}
+              onClick={() => handleLaunch(item)}
             >
               <div className="flex-shrink-0 w-10 h-10 text-white flex items-center justify-center font-semibold">
-                {
-                  app.iconDataUrl ?
-
-                    <img src={app.iconDataUrl as string} alt={app.name} />
-
-                    :
-
-                    <IconDefault />
-                }
+                {getIcon(item)}
               </div>
               <div className="ml-4 flex-1">
-                <div className="font-medium text-white">{app.name}</div>
+                <div className="font-medium text-white">{item.name}</div>
+                <div className="text-sm text-gray-200 truncate">{getSubtext(item)}</div>
               </div>
+              {item.type === "file" && (
+                <div className="text-xs px-2 py-1 rounded-full bg-gray-700 text-gray-300 ml-2">
+                  {item.extension?.slice(1).toUpperCase()}
+                </div>
+              )}
             </li>
           ))}
         </ul>

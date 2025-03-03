@@ -22,5 +22,6 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
   // Lancer une application
   launchApp: (appInfo) => electron.ipcRenderer.invoke("launch-app", appInfo),
   getAppIcon: (iconPath) => electron.ipcRenderer.invoke("get-app-icon", iconPath),
-  openLink: (url) => electron.ipcRenderer.send("open-link", url)
+  openLink: (url) => electron.ipcRenderer.send("open-link", url),
+  openFile: (filePath) => electron.ipcRenderer.invoke("open-file", filePath)
 });

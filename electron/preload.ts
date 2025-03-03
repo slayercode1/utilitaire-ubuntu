@@ -30,5 +30,8 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 
   getAppIcon: (iconPath: string) => ipcRenderer.invoke('get-app-icon', iconPath),
 
-  openLink: (url: string) => ipcRenderer.send('open-link', url)
+  openLink: (url: string) => ipcRenderer.send('open-link', url),
+
+  openFile: (filePath: string) => ipcRenderer.invoke("open-file", filePath),
+
 })

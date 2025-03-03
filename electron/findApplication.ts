@@ -45,6 +45,7 @@ const sizeDirs: string[] = [
 const iconPathCache = new Map<string, string>();
 
 interface AppInfo {
+	type: 'apps'
 	name: string;
 	exec: string;
 	iconPath: string;
@@ -189,6 +190,7 @@ async function parseDesktopFile(filePath: string): Promise<AppInfo | null> {
 		const iconName = iconMatch ? iconMatch[1] : "";
 
 		return {
+			type: 'apps',
 			name: nameMatch[1],
 			exec,
 			iconPath: await findIconPath(iconName),
@@ -224,8 +226,20 @@ export async function findAllApplications(searchTerm = ""): Promise<AppInfo[]> {
 		}
 	});
 
+
+	
 	// Convertir en tableau et trier
-	return Array.from(appMap.values()).sort((a, b) =>
+	const apps =  Array.from(appMap.values()).sort((a, b) =>
 		a.name.localeCompare(b.name),
 	);
+
+
+	// console.log('------------------------------------')
+	// console.log('apps-name', apps.map(app => app.name))
+	// console.log('apps-exec', apps.map(app => app.exec))
+	// console.log('------------------------------------')
+
+	return apps
+
+
 }

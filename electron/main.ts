@@ -15,6 +15,7 @@ import {spawn } from "node:child_process";
 import * as fs from "node:fs";
 import { findAllApplications } from "./findApplication";
 import { setAutoLaunch } from "./autolauch";
+import { findFiles } from "./findFile";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname, "..");
@@ -90,20 +91,27 @@ function createTray() {
 	});
 }
 
+let icon = path.join(process.env.VITE_PUBLIC, "logo.png")
+if (process.platform === 'win32') {
+  icon = path.join(process.env.VITE_PUBLIC,"generated", "icon.ico")
+} else if (process.platform === 'darwin') {
+  icon = path.join(process.env.VITE_PUBLIC,"generated", "icon.icns")
+}
+
 
 function createWindow() {
 	const { width, height } = screen.getPrimaryDisplay().workAreaSize;
 	const x = Math.round((width - 700) / 2);
 	const y = Math.round((height - 400) / 2);
-	console.log(path.join(process.env.VITE_PUBLIC, "logo2.png"),)
+	
 	win = new BrowserWindow({
-		icon: path.join(process.env.VITE_PUBLIC, "logo2.png"),
+		icon,
 		webPreferences: {
 			preload: path.join(__dirname, "preload.mjs"),
 			nodeIntegration: true,
 			backgroundThrottling: false,
 		},
-		width: 700,
+		width: 600,
 		height: 400,
 		frame: false,
 		alwaysOnTop: true,
@@ -136,9 +144,9 @@ function createWindow() {
 	win.on("show", () => {
 		const { width, height } = screen.getPrimaryDisplay().workAreaSize;
 		if (win) win.setBounds({
-			width: 700,
+			width: 600,
 			height: 400,
-			x: Math.round((width - 700) / 2),
+			x: Math.round((width - 600) / 2),
 			y: Math.round((height - 400) / 2),
 		});
 		if (win) win.setOpacity(1);
@@ -167,7 +175,11 @@ app.on("will-quit", () => {
 
 ipcMain.handle("get-installed-apps", async (_, searchTerm = "") => {
 	try {
-		return await findAllApplications(searchTerm);
+		const [apps, files] = await Promise.all([
+			findAllApplications(searchTerm),
+			findFiles(searchTerm),
+		  ]);
+		  return [...apps, ...files];
 	} catch (error) {
 		console.error("Erreur lors de la recherche des applications:", error);
 		return [];
@@ -220,4 +232,43 @@ ipcMain.on('open-link', (_, url) => {
     child.unref(); // Permet au processus enfant de continuer à s'exécuter même si le processus parent se termine
 });
 
+// Pour ouvrir un fichier avec l'application appropriée
+ipcMain.handle("open-file", async (_, filePath) => {
+	return new Promise((resolve, reject) => {
+	  try {
+
+		console.log("Ouverture du fichier:", filePath);
+		let child;
+
+		if (path.extname(filePath).toLowerCase() === ".jar") {
+			child = spawn("java", ["-jar", filePath], {
+				detached: true,
+				stdio: "ignore",
+				shell: true,
+			});
+	
+			child.unref(); // Permet au processus enfant de
+		} else {
+			child = spawn("xdg-open", [filePath], {
+				detached: true,
+				stdio: "ignore",
+				shell: true,
+			});
+		}
   
+		child.unref(); // Permet au processus enfant de continuer à s'exécuter même si le processus parent se termine
+  
+		child.on("error", (error) => {
+		  console.error("Erreur lors de l'ouverture du fichier:", error);
+		  reject(error);
+		});
+  
+		child.on("spawn", () => {
+		  resolve(true);
+		});
+	  } catch (error) {
+		console.error("Erreur lors de l'ouverture du fichier:", error);
+		reject(error);
+	  }
+	});
+  });
